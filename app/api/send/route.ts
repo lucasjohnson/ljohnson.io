@@ -3,9 +3,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { resumeData } from "@/lib/resumeData";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const { jobId, recipientEmail } = await request.json();
 
   if (!jobId || !recipientEmail) {

@@ -18,7 +18,7 @@ create table if not exists jobs (
   tags text[] default '{}',
   url text not null,
   score integer default 1 check (score between 1 and 5),
-  status text default 'new' check (status in ('new', 'prepared', 'approved', 'sent', 'rejected')),
+  status text default 'new' check (status in ('new', 'applied', 'unapproved', 'approved', 'archived')),
   posted_at date,
   fetched_at date default current_date,
   applied_at timestamptz,

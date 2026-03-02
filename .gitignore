@@ -1,6 +1,5 @@
 # dependencies
 node_modules/
-.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -41,6 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# project-specific
-jobs/
-applications/
+
+.pnpm-store
