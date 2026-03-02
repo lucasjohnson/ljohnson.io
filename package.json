@@ -1,0 +1,45 @@
+{
+  "name": "job-search-automation",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Automated job search and application prep for Senior Frontend (Next.js/React) remote roles in Berlin with visa sponsorship",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "fetch": "node scripts/fetchJobs.js",
+    "prep": "node scripts/prepApplications.js",
+    "pipeline": "pnpm run fetch && pnpm run prep"
+  },
+  "dependencies": {
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.8",
+    "@mui/material": "^7.3.8",
+    "@mui/material-nextjs": "^7.3.8",
+    "@mui/x-data-grid": "^8.27.3",
+    "@supabase/supabase-js": "^2.98.0",
+    "@tommyvez/passfort": "^1.0.1",
+    "docx": "^9.6.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "resend": "^6.9.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

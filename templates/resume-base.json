@@ -1,0 +1,101 @@
+{
+  "name": "Lucas Johnson",
+  "email": "contact@lucasjohnson.co.nz",
+  "phone": "+49 174 9242825",
+  "location": "Berlin, Germany",
+  "linkedin": "",
+  "github": "",
+  "portfolio": "",
+  "summary": "Front-end Web Developer with nine years of professional experience. Team player who is at home in agile environments, has a keen eye for detail, strong communication skills, and who is able to adjust to the needs of any project.",
+  "skills": {
+    "languages": ["JavaScript", "TypeScript"],
+    "frameworks": ["React", "Next.js"],
+    "queries": ["GraphQL", "Prisma"],
+    "testing": ["Cypress", "Jest", "Storybook"],
+    "accessibility": ["WCAG AA compliance"],
+    "cms": ["Prismic", "Netlify CMS", "Adobe Experience Manager"],
+    "hosting": ["Vercel", "Netlify", "AWS"],
+    "other": ["Redux", "Gatsby", "Sass", "Bootstrap", "Gulp", "Shopify", "WordPress", "Sketch", "Zeplin"]
+  },
+  "experience": [
+    {
+      "title": "Front-end Developer",
+      "company": "Candis",
+      "location": "Berlin, Germany",
+      "startDate": "2022-04",
+      "endDate": "2024-09",
+      "highlights": [
+        "Built UI for the production application with React, TypeScript, and GraphQL",
+        "Worked closely with the design team to build, brainstorm, troubleshoot, and test new UI components for the internal design system used by all developers for the production application and marketing website",
+        "Wrote component and E2E tests with Cypress",
+        "Used Storybook to build UI and for visual regression testing"
+      ]
+    },
+    {
+      "title": "Senior Front-end Developer",
+      "company": "Monks",
+      "location": "Remote",
+      "startDate": "2019-09",
+      "endDate": "2022-05",
+      "highlights": [
+        "Built websites with TypeScript and Adobe Experience Manager for clients such as Hewlett-Packard and Scotia Bank",
+        "Created analytics Data Layers for Adobe Tag Manager for Cineplex",
+        "QA, cross browser testing to IE11, WCAG 2.0 AA standards",
+        "Deployed production builds to AWS"
+      ]
+    },
+    {
+      "title": "Front-end Web Development and Design",
+      "company": "Freelance",
+      "location": "Remote",
+      "startDate": "2019-02",
+      "endDate": "2019-08",
+      "highlights": [
+        "Built websites with React JS/Redux for clients such as Telus and Longos",
+        "Created UX/UI designs with Sketch and Zeplin",
+        "Worked with static generator Gatsby JS",
+        "Integrated Netlify CMS into GraphQL websites",
+        "Deployed websites to Netlify"
+      ]
+    },
+    {
+      "title": "Front-end Web Developer",
+      "company": "Thinkingbox",
+      "location": "Toronto, Canada",
+      "startDate": "2017-02",
+      "endDate": "2018-10",
+      "highlights": [
+        "Built websites with React JS/Redux for clients such as Paramount Films and Alberta Health Services",
+        "Worked with CMS platforms including WordPress and Prismic",
+        "Deployed production builds to AWS and Digital Ocean",
+        "Built Shopify templates"
+      ]
+    },
+    {
+      "title": "Front-end Web Developer",
+      "company": "Nurun",
+      "location": "Toronto, Canada",
+      "startDate": "2015-10",
+      "endDate": "2017-01",
+      "highlights": [
+        "Built HTML and JavaScript templates from Photoshop design comps",
+        "Wrote mobile-first responsive layouts with CSS, Bootstrap, Gulp and Grunt",
+        "Integrated builds into various CMS backends including WordPress and Kentico",
+        "Participated in daily scrums and development planning sessions"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Full Stack Web Development",
+      "institution": "Bitmaker Labs, Toronto, Canada",
+      "year": "2015"
+    },
+    {
+      "degree": "BFA with Dist., Photography and Media Studies",
+      "institution": "OCAD University, Toronto, Canada",
+      "year": "2015"
+    }
+  ],
+  "languages": ["English (native)", "German (basic)"]
+}
