@@ -1,6 +1,6 @@
 import { withPasswordProtect } from "@tommyvez/passfort/next";
 
-export default withPasswordProtect({
+export const proxy = withPasswordProtect({
   paths: ["/jobs"],
   loginPath: "/login",
   excludePaths: ["/api/cron", "/_next", "/favicon.ico"],
