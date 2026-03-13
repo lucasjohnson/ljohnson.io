@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-import { scoreJob } from "@/lib/scoring";
 import { fetchArbeitnow } from "@/lib/fetchers/arbeitnow";
 import { fetchLinkedIn } from "@/lib/fetchers/linkedin";
 import { fetchRemotive } from "@/lib/fetchers/remotive";
@@ -41,14 +40,6 @@ export async function GET(request: NextRequest) {
   // Upsert into Supabase
   let inserted = 0;
   for (const job of filtered) {
-    const score = scoreJob({
-      title: job.title,
-      tags: job.tags,
-      visa_sponsorship: job.visa_sponsorship,
-      location: job.location,
-      salary: job.salary,
-    });
-
     const { error } = await supabase.from("jobs").upsert(
       {
         external_id: job.external_id,
@@ -61,7 +52,6 @@ export async function GET(request: NextRequest) {
         salary: job.salary,
         tags: job.tags,
         url: job.url,
-        score,
         posted_at: job.posted_at,
         fetched_at: today,
         ...(job.apply_email && { apply_email: job.apply_email }),

@@ -16,11 +16,12 @@ import Alert from "@mui/material/Alert";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Skeleton from "@mui/material/Skeleton";
-import StarIcon from "@mui/icons-material/Star";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DescriptionIcon from "@mui/icons-material/Description";
 import SendIcon from "@mui/icons-material/Send";
 import DownloadIcon from "@mui/icons-material/Download";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StatusChip from "./StatusChip";
 
 interface Job {
@@ -33,7 +34,6 @@ interface Job {
   salary: string | null;
   tags: string[];
   url: string;
-  score: number;
   status: string;
   source: string;
   posted_at: string;
@@ -47,6 +47,7 @@ interface JobModalProps {
   open: boolean;
   onClose: () => void;
   onStatusChange: (jobId: string, status: string) => void;
+  onDelete: (jobId: string) => void;
 }
 
 function wrapHtml(html: string | null): string {
@@ -75,9 +76,11 @@ function wrapHtml(html: string | null): string {
 
 const PREVIEW_STATUSES = ["prepared", "approved", "sent"];
 
-export default function JobModal({ job, open, onClose, onStatusChange }: JobModalProps) {
+export default function JobModal({ job, open, onClose, onStatusChange, onDelete }: JobModalProps) {
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [markingApplied, setMarkingApplied] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [error, setError] = useState("");
@@ -101,6 +104,8 @@ export default function JobModal({ job, open, onClose, onStatusChange }: JobModa
       setCoverLetterHtml(null);
       setPreviewLoading(false);
       setDownloading(false);
+      setDeleting(false);
+      setMarkingApplied(false);
     }
   }, [open, job?.id]);
 
@@ -205,9 +210,40 @@ export default function JobModal({ job, open, onClose, onStatusChange }: JobModa
     }
   };
 
-  const scoreStars = Array.from({ length: 5 }, (_, i) => (
-    <StarIcon key={i} sx={{ color: i < job.score ? "#faaf00" : "#e0e0e0", fontSize: 20 }} />
-  ));
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this job?")) return;
+    setDeleting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete job");
+      onDelete(job.id);
+      onClose();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleMarkApplied = async () => {
+    setMarkingApplied(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "applied" }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      onStatusChange(job.id, "applied");
+      setSuccess("Marked as applied!");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setMarkingApplied(false);
+    }
+  };
 
   const hasPreview = PREVIEW_STATUSES.includes(job.status) || resumeHtml || coverLetterHtml;
 
@@ -228,7 +264,6 @@ export default function JobModal({ job, open, onClose, onStatusChange }: JobModa
 
         <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", flexWrap: "wrap" }}>
           <StatusChip status={job.status} />
-          <Box sx={{ display: "flex" }}>{scoreStars}</Box>
           <Chip label={job.source} variant="outlined" size="small" />
           {job.remote && <Chip label="Remote" color="success" variant="outlined" size="small" />}
           {job.visa_sponsorship && <Chip label="Visa Sponsor" color="primary" variant="outlined" size="small" />}
@@ -365,6 +400,28 @@ export default function JobModal({ job, open, onClose, onStatusChange }: JobModa
             Approve & Send
           </Button>
         )}
+
+        {job.status !== "applied" && (
+          <Button
+            variant="outlined"
+            color="info"
+            onClick={handleMarkApplied}
+            disabled={markingApplied}
+            startIcon={markingApplied ? <CircularProgress size={16} /> : <CheckCircleIcon />}
+          >
+            {markingApplied ? "Updating..." : "Mark as Applied"}
+          </Button>
+        )}
+
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleDelete}
+          disabled={deleting}
+          startIcon={deleting ? <CircularProgress size={16} /> : <DeleteIcon />}
+        >
+          {deleting ? "Deleting..." : "Delete"}
+        </Button>
 
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
