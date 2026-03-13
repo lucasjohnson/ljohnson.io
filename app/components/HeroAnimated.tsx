@@ -100,6 +100,7 @@ export default function HeroAnimated() {
           display: "flex",
           gap: 16,
           justifyContent: "center",
+          flexFlow: "wrap",
         }}
       >
         <motion.a
