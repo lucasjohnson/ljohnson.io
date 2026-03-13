@@ -123,33 +123,44 @@ export default function ContactModal() {
         Contact
       </button>
 
-      {open && (
-        <div
-          onClick={handleClose}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.7)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: 24,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleClose}
             style={{
-              backgroundColor: "#111",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 16,
-              padding: 32,
-              width: "100%",
-              maxWidth: 440,
-              position: "relative",
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.7)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+              padding: 24,
             }}
           >
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: "#111",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 16,
+                padding: 32,
+                width: "100%",
+                maxWidth: 440,
+                position: "relative",
+              }}
+            >
             <button
               onClick={handleClose}
               style={{
@@ -337,9 +348,10 @@ export default function ContactModal() {
                 </button>
               </form>
             )}
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
