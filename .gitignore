@@ -43,3 +43,5 @@ next-env.d.ts
 
 .pnpm-store
 .env*.local
+*.docx
+LinkedIn_Profile_Sections.md
