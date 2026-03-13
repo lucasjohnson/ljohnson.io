@@ -8,8 +8,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TableSortLabel from "@mui/material/TableSortLabel";
-import Paper from "@mui/material/Paper";
-import Chip from "@mui/material/Chip";
+import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { TableVirtuoso, TableComponents } from "react-virtuoso";
 import { supabase } from "@/lib/supabase/client";
@@ -51,22 +50,51 @@ const columns: Column[] = [
     field: "source",
     label: "Source",
     width: 110,
-    render: (value) => <Chip label={value as string} size="small" variant="outlined" />,
+    render: (value) => (
+      <span
+        style={{
+          fontSize: 12,
+          color: "rgba(255,255,255,0.5)",
+          padding: "2px 8px",
+          borderRadius: 9999,
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        {value as string}
+      </span>
+    ),
   },
   {
     field: "status",
     label: "Status",
-    width: 110,
+    width: 120,
     render: (value) => <StatusChip status={value as string} />,
   },
-  { field: "posted_at", label: "Posted", width: 110 },
+  {
+    field: "posted_at",
+    label: "Posted",
+    width: 110,
+    render: (value) => (
+      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+        {value as string}
+      </span>
+    ),
+  },
 ];
 
 type SortDir = "asc" | "desc";
 
 const VirtuosoTableComponents: TableComponents<Job> = {
   Scroller: forwardRef<HTMLDivElement>((props, ref) => (
-    <TableContainer component={Paper} {...props} ref={ref} sx={{ borderRadius: 2 }} />
+    <TableContainer
+      {...props}
+      ref={ref}
+      sx={{
+        borderRadius: "8px",
+        border: "1px solid rgba(255,255,255,0.08)",
+        bgcolor: "#111111",
+      }}
+    />
   )),
   Table: (props) => (
     <Table {...props} sx={{ borderCollapse: "separate", tableLayout: "fixed" }} />
@@ -74,7 +102,16 @@ const VirtuosoTableComponents: TableComponents<Job> = {
   TableHead: forwardRef<HTMLTableSectionElement>((props, ref) => (
     <TableHead {...props} ref={ref} />
   )),
-  TableRow: ({ ...props }) => <TableRow hover {...props} sx={{ cursor: "pointer" }} />,
+  TableRow: ({ ...props }) => (
+    <TableRow
+      {...props}
+      sx={{
+        cursor: "pointer",
+        "&:hover": { bgcolor: "rgba(255,255,255,0.03)" },
+        transition: "background-color 0.1s",
+      }}
+    />
+  ),
   TableBody: forwardRef<HTMLTableSectionElement>((props, ref) => (
     <TableBody {...props} ref={ref} />
   )),
@@ -142,26 +179,36 @@ export default function JobsTable() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
-        <CircularProgress />
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", pt: 16 }}>
+        <CircularProgress size={20} sx={{ color: "rgba(255,255,255,0.3)" }} />
+      </Box>
+    );
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <Box sx={{ textAlign: "center", pt: 16 }}>
+        <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>
+          No jobs found
+        </Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", height: "calc(100vh - 140px)" }}>
+    <Box sx={{ width: "100%", height: "calc(100vh - 100px)" }}>
       <TableVirtuoso
         data={sortedJobs}
         components={VirtuosoTableComponents}
         fixedHeaderContent={() => (
-          <TableRow sx={{ bgcolor: "background.paper" }}>
+          <TableRow sx={{ bgcolor: "#111111" }}>
             {columns.map((col) => (
               <TableCell
                 key={col.field}
                 sx={{
                   width: col.flex ? undefined : col.width,
-                  fontWeight: 700,
-                  bgcolor: "background.paper",
+                  bgcolor: "#111111",
+                  borderBottom: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
                 <TableSortLabel
@@ -180,7 +227,10 @@ export default function JobsTable() {
             {columns.map((col) => (
               <TableCell
                 key={col.field}
-                sx={{ width: col.flex ? undefined : col.width }}
+                sx={{
+                  width: col.flex ? undefined : col.width,
+                  color: col.field === "title" ? "#ededed" : "rgba(255,255,255,0.6)",
+                }}
                 onClick={() => handleRowClick(job)}
               >
                 {col.render ? col.render(job[col.field], job) : (job[col.field] as string)}

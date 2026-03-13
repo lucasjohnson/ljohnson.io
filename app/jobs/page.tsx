@@ -17,22 +17,6 @@ export default function JobsPage() {
           gap: 1.5,
         }}
       >
-        <Box
-          sx={{
-            width: 28,
-            height: 28,
-            borderRadius: "6px",
-            background: "linear-gradient(135deg, #333 0%, #555 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-            <path d="M16 7V5a4 4 0 0 0-8 0v2" />
-          </svg>
-        </Box>
         <Typography
           variant="body1"
           sx={{
@@ -42,7 +26,7 @@ export default function JobsPage() {
             letterSpacing: "-0.01em",
           }}
         >
-          Jobs
+          ljohnson.io
         </Typography>
       </Box>
 

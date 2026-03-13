@@ -1,15 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import Link from "@mui/material/Link";
-import Divider from "@mui/material/Divider";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
@@ -49,23 +46,25 @@ interface JobModalProps {
 }
 
 function wrapHtml(html: string | null): string {
-  if (!html) return "<p style='padding:16px;color:#999'>No preview available</p>";
+  if (!html) return "<p style='padding:16px;color:#666'>No preview available</p>";
   return `<!DOCTYPE html>
 <html>
 <head>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', Arial, sans-serif;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
       padding: 24px;
       margin: 0;
-      color: #333;
+      color: #ededed;
+      background: #0a0a0a;
     }
-    h1 { font-size: 18px; margin: 16px 0 8px; }
-    h2 { font-size: 16px; margin: 12px 0 6px; }
+    h1 { font-size: 18px; margin: 16px 0 8px; color: #fff; }
+    h2 { font-size: 16px; margin: 12px 0 6px; color: #fff; }
     p { margin: 4px 0; }
     ul, ol { margin: 4px 0; padding-left: 24px; }
+    a { color: #60a5fa; }
   </style>
 </head>
 <body>${html}</body>
@@ -140,7 +139,6 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
       onStatusChange(job.id, "prepared");
       setSuccess("Cover letter generated!");
 
-      // Fetch preview immediately after generation
       const coverRes = await fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`);
       if (coverRes.ok) setCoverLetterHtml((await coverRes.json()).html);
     } catch (err) {
@@ -229,56 +227,87 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
 
   const hasPreview = PREVIEW_STATUSES.includes(job.status) || coverLetterHtml;
 
+  const Tag = ({ children }: { children: React.ReactNode }) => (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "2px 8px",
+        borderRadius: 9999,
+        fontSize: 12,
+        border: "1px solid rgba(255,255,255,0.1)",
+        color: "rgba(255,255,255,0.5)",
+      }}
+    >
+      {children}
+    </span>
+  );
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth={hasPreview ? "md" : "sm"} fullWidth>
-      <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="h6" component="div" fontWeight={700}>
+      <Box sx={{ px: 3, pt: 2.5, pb: 1.5 }}>
+        <Typography sx={{ fontSize: 18, fontWeight: 600, color: "#ededed", letterSpacing: "-0.02em" }}>
           {job.title}
         </Typography>
-        <Typography variant="subtitle1" component="span" color="text.secondary">
-          {job.company} — {job.location}
+        <Typography sx={{ fontSize: 14, color: "rgba(255,255,255,0.45)", mt: 0.25 }}>
+          {job.company} &middot; {job.location}
         </Typography>
-      </DialogTitle>
+      </Box>
 
-      <DialogContent dividers>
+      <DialogContent sx={{ pt: "12px !important" }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1, mb: 2, alignItems: "center", flexWrap: "wrap" }}>
           <StatusChip status={job.status} />
-          <Chip label={job.source} variant="outlined" size="small" />
-          {job.remote && <Chip label="Remote" color="success" variant="outlined" size="small" />}
-          {job.visa_sponsorship && <Chip label="Visa Sponsor" color="primary" variant="outlined" size="small" />}
+          <Tag>{job.source}</Tag>
+          {job.remote && <Tag>Remote</Tag>}
+          {job.visa_sponsorship && <Tag>Visa Sponsor</Tag>}
         </Box>
 
         {job.salary && (
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Salary:</strong> {job.salary}
+          <Typography sx={{ fontSize: 13, color: "rgba(255,255,255,0.6)", mb: 0.5 }}>
+            <span style={{ color: "rgba(255,255,255,0.35)" }}>Salary</span> &nbsp;{job.salary}
           </Typography>
         )}
 
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          <strong>Posted:</strong> {job.posted_at}
+        <Typography sx={{ fontSize: 13, color: "rgba(255,255,255,0.6)", mb: 1.5 }}>
+          <span style={{ color: "rgba(255,255,255,0.35)" }}>Posted</span> &nbsp;{job.posted_at}
         </Typography>
 
         {job.tags && job.tags.length > 0 && (
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mb: 2 }}>
             {job.tags.map((tag, i) => (
-              <Chip key={i} label={tag} size="small" variant="outlined" sx={{ fontSize: 12 }} />
+              <Tag key={i}>{tag}</Tag>
             ))}
           </Box>
         )}
 
-        <Link href={job.url} target="_blank" rel="noopener" sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 2 }}>
-          View original posting <OpenInNewIcon sx={{ fontSize: 16 }} />
+        <Link
+          href={job.url}
+          target="_blank"
+          rel="noopener"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.5,
+            mb: 2,
+            fontSize: 13,
+            color: "rgba(255,255,255,0.5)",
+            textDecoration: "none",
+            "&:hover": { color: "#ededed" },
+            transition: "color 0.15s",
+          }}
+        >
+          View original posting <OpenInNewIcon sx={{ fontSize: 14 }} />
         </Link>
 
-        {/* Document Previews */}
         {hasPreview && (
           <>
-            <Divider sx={{ my: 2 }} />
+            <Box sx={{ borderTop: "1px solid rgba(255,255,255,0.08)", my: 2 }} />
             <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Cover Letter Preview</Typography>
+              <Typography sx={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.04em", mb: 1 }}>
+                Cover Letter Preview
+              </Typography>
 
               {previewLoading ? (
                 <Box sx={{ p: 2 }}>
@@ -290,9 +319,8 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
               ) : (
                 <Box
                   sx={{
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 1,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "8px",
                     height: 400,
                     overflow: "hidden",
                   }}
@@ -309,46 +337,49 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
           </>
         )}
 
-        <Divider sx={{ my: 2 }} />
-
-        {/* Send dialog inline */}
         {showSendDialog && (
-          <Box sx={{ mb: 2, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Send Application Email</Typography>
-            <TextField
-              fullWidth
-              size="small"
-              label="Recipient Email"
-              type="email"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
-              placeholder="hr@company.com"
-              sx={{ mb: 1 }}
-            />
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button
-                variant="contained"
-                color="success"
+          <>
+            <Box sx={{ borderTop: "1px solid rgba(255,255,255,0.08)", my: 2 }} />
+            <Box sx={{ p: 2, bgcolor: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#ededed", mb: 1.5 }}>
+                Send Application Email
+              </Typography>
+              <TextField
+                fullWidth
                 size="small"
-                onClick={handleSend}
-                disabled={sending}
-                startIcon={sending ? <CircularProgress size={16} /> : <SendIcon />}
-              >
-                {sending ? "Sending..." : "Confirm & Send"}
-              </Button>
-              <Button size="small" onClick={() => setShowSendDialog(false)}>Cancel</Button>
+                label="Recipient Email"
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="hr@company.com"
+                sx={{ mb: 1.5 }}
+              />
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleSend}
+                  disabled={sending}
+                  startIcon={sending ? <CircularProgress size={14} /> : <SendIcon sx={{ fontSize: 14 }} />}
+                >
+                  {sending ? "Sending..." : "Confirm & Send"}
+                </Button>
+                <Button variant="outlined" size="small" onClick={() => setShowSendDialog(false)}>
+                  Cancel
+                </Button>
+              </Box>
             </Box>
-          </Box>
+          </>
         )}
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        {(job.status === "new") && (
+        {job.status === "new" && (
           <Button
             variant="contained"
             onClick={handleGenerate}
             disabled={generating}
-            startIcon={generating ? <CircularProgress size={16} /> : <DescriptionIcon />}
+            startIcon={generating ? <CircularProgress size={14} /> : <DescriptionIcon sx={{ fontSize: 16 }} />}
           >
             {generating ? "Generating..." : "Generate Cover Letter"}
           </Button>
@@ -359,7 +390,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
             variant="outlined"
             onClick={handleDownload}
             disabled={downloading}
-            startIcon={downloading ? <CircularProgress size={16} /> : <DownloadIcon />}
+            startIcon={downloading ? <CircularProgress size={14} /> : <DownloadIcon sx={{ fontSize: 16 }} />}
           >
             {downloading ? "Saving..." : "Download"}
           </Button>
@@ -368,9 +399,8 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
         {(job.status === "prepared" || job.status === "approved") && (
           <Button
             variant="contained"
-            color="success"
             onClick={() => setShowSendDialog(true)}
-            startIcon={<SendIcon />}
+            startIcon={<SendIcon sx={{ fontSize: 16 }} />}
           >
             Approve & Send
           </Button>
@@ -379,26 +409,33 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
         {job.status !== "applied" && (
           <Button
             variant="outlined"
-            color="info"
             onClick={handleMarkApplied}
             disabled={markingApplied}
-            startIcon={markingApplied ? <CircularProgress size={16} /> : <CheckCircleIcon />}
+            startIcon={markingApplied ? <CircularProgress size={14} /> : <CheckCircleIcon sx={{ fontSize: 16 }} />}
           >
             {markingApplied ? "Updating..." : "Mark as Applied"}
           </Button>
         )}
 
+        <Box sx={{ flex: 1 }} />
+
         <Button
           variant="outlined"
-          color="error"
           onClick={handleDelete}
           disabled={deleting}
-          startIcon={deleting ? <CircularProgress size={16} /> : <DeleteIcon />}
+          sx={{
+            borderColor: "rgba(239,68,68,0.3)",
+            color: "#f87171",
+            "&:hover": { borderColor: "#ef4444", bgcolor: "rgba(239,68,68,0.08)" },
+          }}
+          startIcon={deleting ? <CircularProgress size={14} /> : <DeleteIcon sx={{ fontSize: 16 }} />}
         >
           {deleting ? "Deleting..." : "Delete"}
         </Button>
 
-        <Button onClick={onClose}>Close</Button>
+        <Button variant="outlined" onClick={onClose}>
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   );
