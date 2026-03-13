@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { motion, AnimatePresence } from "motion/react";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -84,6 +85,10 @@ export default function ContactModal() {
       if (!res.ok) throw new Error();
       setSubmitStatus("sent");
       reset();
+      setTimeout(() => {
+        setOpen(false);
+        setSubmitStatus("idle");
+      }, 1000);
     } catch {
       setSubmitStatus("error");
     }
@@ -97,7 +102,11 @@ export default function ContactModal() {
 
   return (
     <>
-      <button className="pill-link" onClick={() => setOpen(true)} style={pillButton}>
+      <button
+        className="pill-link"
+        onClick={() => setOpen(true)}
+        style={pillButton}
+      >
         <svg
           width="18"
           height="18"
@@ -169,7 +178,7 @@ export default function ContactModal() {
             >
               Get in touch
             </h2>
-            <p
+            {/* <p
               style={{
                 fontSize: 14,
                 color: "rgba(255,255,255,0.4)",
@@ -177,7 +186,7 @@ export default function ContactModal() {
               }}
             >
               I&apos;ll get back to you as soon as I can.
-            </p>
+            </p> */}
 
             {submitStatus === "sent" ? (
               <div
@@ -206,15 +215,6 @@ export default function ContactModal() {
                 <p style={{ fontSize: 16, fontWeight: 500, margin: "0 0 8px" }}>
                   Message sent
                 </p>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.4)",
-                    margin: 0,
-                  }}
-                >
-                  Thanks for reaching out!
-                </p>
               </div>
             ) : (
               <form
@@ -228,9 +228,24 @@ export default function ContactModal() {
                     placeholder="Your name"
                     style={inputStyle}
                   />
-                  {errors.name && (
-                    <p style={errorStyle}>{errors.name.message}</p>
-                  )}
+                  <AnimatePresence>
+                    {errors.name && (
+                      <motion.p
+                        key="name-error"
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: "auto", marginTop: 4 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{
+                          ...errorStyle,
+                          overflow: "hidden",
+                          marginTop: 0,
+                        }}
+                      >
+                        {errors.name.message}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div>
@@ -241,9 +256,24 @@ export default function ContactModal() {
                     placeholder="you@example.com"
                     style={inputStyle}
                   />
-                  {errors.email && (
-                    <p style={errorStyle}>{errors.email.message}</p>
-                  )}
+                  <AnimatePresence>
+                    {errors.email && (
+                      <motion.p
+                        key="email-error"
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: "auto", marginTop: 4 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{
+                          ...errorStyle,
+                          overflow: "hidden",
+                          marginTop: 0,
+                        }}
+                      >
+                        {errors.email.message}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div>
@@ -254,23 +284,46 @@ export default function ContactModal() {
                     placeholder="How can I help?"
                     style={{ ...inputStyle, resize: "vertical" }}
                   />
-                  {errors.message && (
-                    <p style={errorStyle}>{errors.message.message}</p>
-                  )}
+                  <AnimatePresence>
+                    {errors.message && (
+                      <motion.p
+                        key="message-error"
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: "auto", marginTop: 4 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{
+                          ...errorStyle,
+                          overflow: "hidden",
+                          marginTop: 0,
+                        }}
+                      >
+                        {errors.message.message}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {submitStatus === "error" && (
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: "#ef4444",
-                      margin: 0,
-                      textAlign: "center",
-                    }}
-                  >
-                    Something went wrong. Please try again.
-                  </p>
-                )}
+                <AnimatePresence>
+                  {submitStatus === "error" && (
+                    <motion.p
+                      key="submit-error"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        fontSize: 13,
+                        color: "#ef4444",
+                        margin: 0,
+                        textAlign: "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      Something went wrong. Please try again.
+                    </motion.p>
+                  )}
+                </AnimatePresence>
 
                 <button
                   type="submit"

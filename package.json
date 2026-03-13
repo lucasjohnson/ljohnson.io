@@ -21,6 +21,7 @@
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "@mui/material-nextjs": "^7.3.9",
+    "@react-email/components": "^1.0.9",
     "@supabase/supabase-js": "^2.99.1",
     "@tommyvez/passfort": "^1.0.1",
     "@vercel/analytics": "^2.0.1",
