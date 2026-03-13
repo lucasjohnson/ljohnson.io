@@ -1,11 +1,22 @@
 import { RawJob } from "./types";
 
-const KEYWORDS = ["react", "next.js", "nextjs", "frontend", "front-end"];
+const TITLE_PATTERNS = [
+  "frontend", "front-end", "front end",
+  "web developer", "web engineer",
+  "react", "next.js", "nextjs",
+];
+const GERMAN_MARKERS = [
+  "entwickler", "softwareentwickler", "webentwickler",
+  "(m/w/d)", "(m/w)", "(f/m/d)", "(w/m/d)", "(gn)",
+  "und", "für", "gesucht",
+];
 const MAX_PAGES = 5;
 
-function matchesKeywords(text: string): boolean {
-  const lower = text.toLowerCase();
-  return KEYWORDS.some((kw) => lower.includes(kw));
+function isTitleMatch(title: string): boolean {
+  const lower = title.toLowerCase();
+  const hasMatch = TITLE_PATTERNS.some((p) => lower.includes(p));
+  const isGerman = GERMAN_MARKERS.some((g) => lower.includes(g));
+  return hasMatch && !isGerman;
 }
 
 export async function fetchArbeitnow(): Promise<RawJob[]> {
@@ -21,7 +32,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
       if (jobs.length === 0) break;
 
       for (const job of jobs) {
-        if (!matchesKeywords(`${job.title} ${job.description}`)) continue;
+        if (!isTitleMatch(job.title)) continue;
         results.push({
           external_id: `arbeitnow-${job.slug}`,
           source: "Arbeitnow",

@@ -1,10 +1,21 @@
 import { RawJob } from "./types";
 
-const KEYWORDS = ["react", "next.js", "nextjs", "frontend", "front-end"];
+const TITLE_PATTERNS = [
+  "frontend", "front-end", "front end",
+  "web developer", "web engineer",
+  "react", "next.js", "nextjs",
+];
+const GERMAN_MARKERS = [
+  "entwickler", "softwareentwickler", "webentwickler",
+  "(m/w/d)", "(m/w)", "(f/m/d)", "(w/m/d)", "(gn)",
+  "und", "für", "gesucht",
+];
 
-function matchesKeywords(text: string): boolean {
-  const lower = text.toLowerCase();
-  return KEYWORDS.some((kw) => lower.includes(kw));
+function isTitleMatch(title: string): boolean {
+  const lower = title.toLowerCase();
+  const hasMatch = TITLE_PATTERNS.some((p) => lower.includes(p));
+  const isGerman = GERMAN_MARKERS.some((g) => lower.includes(g));
+  return hasMatch && !isGerman;
 }
 
 export async function fetchLinkedIn(): Promise<RawJob[]> {
@@ -30,7 +41,7 @@ export async function fetchLinkedIn(): Promise<RawJob[]> {
           if (!titleMatch || !linkMatch) continue;
 
           const title = titleMatch[1].trim();
-          if (!matchesKeywords(title)) continue;
+          if (!isTitleMatch(title)) continue;
 
           const companyMatch = /base-search-card__subtitle[\s\S]*?<a[^>]*>([\s\S]*?)<\//i.exec(card);
           const locationMatch = /job-search-card__location[^>]*>([\s\S]*?)<\//i.exec(card);

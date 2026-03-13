@@ -1,10 +1,21 @@
 import { RawJob } from "./types";
 
-const KEYWORDS = ["react", "next.js", "nextjs", "frontend", "front-end"];
+const TITLE_PATTERNS = [
+  "frontend", "front-end", "front end",
+  "web developer", "web engineer",
+  "react", "next.js", "nextjs",
+];
+const GERMAN_MARKERS = [
+  "entwickler", "softwareentwickler", "webentwickler",
+  "(m/w/d)", "(m/w)", "(f/m/d)", "(w/m/d)", "(gn)",
+  "und", "für", "gesucht",
+];
 
-function matchesKeywords(text: string): boolean {
-  const lower = text.toLowerCase();
-  return KEYWORDS.some((kw) => lower.includes(kw));
+function isTitleMatch(title: string): boolean {
+  const lower = title.toLowerCase();
+  const hasMatch = TITLE_PATTERNS.some((p) => lower.includes(p));
+  const isGerman = GERMAN_MARKERS.some((g) => lower.includes(g));
+  return hasMatch && !isGerman;
 }
 
 export async function fetchRemotive(): Promise<RawJob[]> {
@@ -18,7 +29,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       const data = await res.json();
 
       for (const job of data.jobs || []) {
-        if (!matchesKeywords(`${job.title} ${job.description}`)) continue;
+        if (!isTitleMatch(job.title)) continue;
 
         // Extract mailto: email from job description HTML
         const mailtoMatch = (job.description || "").match(/mailto:([^\s"'<>]+)/i);

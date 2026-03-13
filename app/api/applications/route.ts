@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-import { generateResume } from "@/lib/docgen/resume";
 import { generateCoverLetter } from "@/lib/docgen/coverLetter";
 import mammoth from "mammoth";
 
@@ -30,12 +29,7 @@ export async function POST(request: NextRequest) {
       await supabase.storage.createBucket("applications", { public: false });
     }
 
-    // Generate documents
-    const resumeBuffer = await generateResume({
-      title: job.title,
-      tags: job.tags || [],
-    });
-
+    // Generate cover letter
     const coverLetterBuffer = await generateCoverLetter({
       title: job.title,
       company: job.company,
@@ -48,15 +42,6 @@ export async function POST(request: NextRequest) {
     const prefix = `${company}-${date}`;
 
     // Upload to Supabase Storage
-    const { error: resumeUploadError } = await supabase.storage
-      .from("applications")
-      .upload(`${prefix}/resume.docx`, resumeBuffer, {
-        contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        upsert: true,
-      });
-
-    if (resumeUploadError) throw resumeUploadError;
-
     const { error: coverUploadError } = await supabase.storage
       .from("applications")
       .upload(`${prefix}/cover-letter.docx`, coverLetterBuffer, {
@@ -67,19 +52,9 @@ export async function POST(request: NextRequest) {
     if (coverUploadError) throw coverUploadError;
 
     // Convert DOCX to HTML for inline preview
-    const resumeHtmlResult = await mammoth.convertToHtml({ buffer: resumeBuffer });
     const coverLetterHtmlResult = await mammoth.convertToHtml({ buffer: coverLetterBuffer });
 
-    // Upload HTML previews
-    const { error: resumeHtmlError } = await supabase.storage
-      .from("applications")
-      .upload(`${prefix}/resume.html`, Buffer.from(resumeHtmlResult.value), {
-        contentType: "text/html",
-        upsert: true,
-      });
-
-    if (resumeHtmlError) throw resumeHtmlError;
-
+    // Upload HTML preview
     const { error: coverHtmlError } = await supabase.storage
       .from("applications")
       .upload(`${prefix}/cover-letter.html`, Buffer.from(coverLetterHtmlResult.value), {
@@ -98,9 +73,7 @@ export async function POST(request: NextRequest) {
 
     const appPayload = {
       job_id: jobId,
-      resume_url: `${prefix}/resume.docx`,
       cover_letter_url: `${prefix}/cover-letter.docx`,
-      resume_html_url: `${prefix}/resume.html`,
       cover_letter_html_url: `${prefix}/cover-letter.html`,
     };
 
@@ -115,7 +88,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      resume_url: `${prefix}/resume.docx`,
       cover_letter_url: `${prefix}/cover-letter.docx`,
     });
   } catch (err) {

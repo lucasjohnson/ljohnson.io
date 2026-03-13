@@ -106,7 +106,7 @@ export default function Home() {
       >
         {[
           { label: "Sources", value: "3" },
-          { label: "Scored 1–5", value: "Auto" },
+          { label: "Filtered", value: "Auto" },
           { label: "Docs Generated", value: "Per Job" },
         ].map((stat) => (
           <div key={stat.label} style={{ textAlign: "center" }}>

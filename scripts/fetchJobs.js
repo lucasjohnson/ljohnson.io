@@ -16,56 +16,26 @@ const supabase = createClient(
 
 // ─── Config ────────────────────────────────────────────────────────────────
 
-const KEYWORDS = ["react", "next.js", "nextjs", "frontend", "front-end"];
 const TODAY = new Date().toISOString().split("T")[0];
 
-// High-value title keywords (weighted scoring)
-const TITLE_BONUS = ["senior", "lead", "staff", "principal", "next.js", "nextjs"];
-const STACK_TAGS  = ["typescript", "tailwind", "graphql", "node", "vercel", "aws", "docker"];
+const TITLE_PATTERNS = [
+  "frontend", "front-end", "front end",
+  "web developer", "web engineer",
+  "react", "next.js", "nextjs",
+];
+const GERMAN_MARKERS = [
+  "entwickler", "softwareentwickler", "webentwickler",
+  "(m/w/d)", "(m/w)", "(f/m/d)", "(w/m/d)", "(gn)",
+  "und", "für", "gesucht",
+];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function matchesKeywords(text = "") {
-  const lower = text.toLowerCase();
-  return KEYWORDS.some((kw) => lower.includes(kw));
-}
-
-/**
- * Score a job 1–5 based on weighted relevance criteria.
- *   Title match (0–2 pts): bonus keywords like "Senior", "Next.js"
- *   Visa sponsorship (0–1 pt): confirmed = +1
- *   Location quality (0–1 pt): Berlin or "Worldwide"/"Anywhere" remote
- *   Salary transparency (0–0.5 pt): salary present = +0.5
- *   Stack tags (0–0.5 pt): matching tech stack tags
- * Raw score is normalized to 1–5.
- */
-function scoreJob(job) {
-  let raw = 0;
-  const titleLower = (job.title || "").toLowerCase();
-  const tagsLower = (Array.isArray(job.tags) ? job.tags.join(" ") : (job.tags || "")).toLowerCase();
-
-  // Title match (0–2)
-  const titleHits = TITLE_BONUS.filter((kw) => titleLower.includes(kw)).length;
-  raw += Math.min(titleHits, 2);
-
-  // Visa sponsorship (0–1)
-  if (job.visa_sponsorship === true || job.visa_sponsorship === "true") raw += 1;
-
-  // Location quality (0–1)
-  const loc = (job.location || "").toLowerCase();
-  if (loc.includes("berlin") || loc.includes("worldwide") || loc.includes("anywhere") || loc.includes("europe")) {
-    raw += 1;
-  }
-
-  // Salary transparency (0–0.5)
-  if (job.salary) raw += 0.5;
-
-  // Stack tags (0–0.5)
-  const tagHits = STACK_TAGS.filter((t) => tagsLower.includes(t)).length;
-  if (tagHits > 0) raw += 0.5;
-
-  // Normalize: max possible raw = 5, min = 0 → clamp to 1–5
-  return Math.max(1, Math.min(5, Math.round(raw)));
+function isTitleMatch(title = "") {
+  const lower = title.toLowerCase();
+  const hasMatch = TITLE_PATTERNS.some((p) => lower.includes(p));
+  const isGerman = GERMAN_MARKERS.some((g) => lower.includes(g));
+  return hasMatch && !isGerman;
 }
 
 // ─── Source 1: Arbeitnow (Public API) ──────────────────────────────────────
@@ -84,7 +54,7 @@ async function fetchArbeitnow() {
       if (jobs.length === 0) break;
 
       for (const job of jobs) {
-        if (!matchesKeywords(`${job.title} ${job.description}`)) continue;
+        if (!isTitleMatch(job.title)) continue;
         results.push({
           external_id: `arbeitnow-${job.slug}`,
           source: "Arbeitnow",
@@ -140,7 +110,7 @@ async function fetchLinkedIn() {
           if (!titleMatch || !linkMatch) continue;
 
           const title = titleMatch[1].trim();
-          if (!matchesKeywords(title)) continue;
+          if (!isTitleMatch(title)) continue;
 
           const companyMatch = /base-search-card__subtitle[\s\S]*?<a[^>]*>([\s\S]*?)<\//i.exec(card);
           const locationMatch = /job-search-card__location[^>]*>([\s\S]*?)<\//i.exec(card);
@@ -184,7 +154,7 @@ async function fetchRemotive() {
       const data = await res.json();
 
       for (const job of data.jobs || []) {
-        if (!matchesKeywords(`${job.title} ${job.description}`)) continue;
+        if (!isTitleMatch(job.title)) continue;
         results.push({
           external_id: `remotive-${job.id}`,
           source: "Remotive",
@@ -245,8 +215,6 @@ async function main() {
   let skipped = 0;
 
   for (const job of filtered) {
-    const score = scoreJob(job);
-
     const { error } = await supabase.from("jobs").upsert(
       {
         external_id: job.external_id,
@@ -259,7 +227,6 @@ async function main() {
         salary: job.salary,
         tags: job.tags,
         url: job.url,
-        score,
         status: "new",
         posted_at: job.posted_at,
         fetched_at: job.fetched_at,
@@ -285,12 +252,10 @@ async function main() {
   if (filtered.length === 0) {
     console.log("\nℹ️  No new jobs found today.");
   } else {
-    console.log("\n🆕 Jobs processed (sorted by score):");
+    console.log("\n🆕 Jobs processed:");
     filtered
-      .map((j) => ({ ...j, score: scoreJob(j) }))
-      .sort((a, b) => b.score - a.score)
       .slice(0, 20)
-      .forEach((j) => console.log(`   ⭐${j.score} [${j.source}] ${j.title} @ ${j.company}`));
+      .forEach((j) => console.log(`   [${j.source}] ${j.title} @ ${j.company}`));
   }
 }
 

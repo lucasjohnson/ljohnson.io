@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         salary: job.salary,
         tags: job.tags,
         url: job.url,
+        status: "new",
         posted_at: job.posted_at,
         fetched_at: today,
         ...(job.apply_email && { apply_email: job.apply_email }),

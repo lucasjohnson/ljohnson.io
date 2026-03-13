@@ -13,8 +13,6 @@ import Divider from "@mui/material/Divider";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
 import Skeleton from "@mui/material/Skeleton";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -85,8 +83,6 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
   const [recipientEmail, setRecipientEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [activeTab, setActiveTab] = useState(0);
-  const [resumeHtml, setResumeHtml] = useState<string | null>(null);
   const [coverLetterHtml, setCoverLetterHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -99,8 +95,6 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
       setRecipientEmail(job?.apply_email || "");
       setError("");
       setSuccess("");
-      setActiveTab(0);
-      setResumeHtml(null);
       setCoverLetterHtml(null);
       setPreviewLoading(false);
       setDownloading(false);
@@ -116,14 +110,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
     const fetchPreviews = async () => {
       setPreviewLoading(true);
       try {
-        const [resumeRes, coverRes] = await Promise.all([
-          fetch(`/api/applications/preview?jobId=${job.id}&doc=resume`),
-          fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`),
-        ]);
-        if (resumeRes.ok) {
-          const { html } = await resumeRes.json();
-          setResumeHtml(html);
-        }
+        const coverRes = await fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`);
         if (coverRes.ok) {
           const { html } = await coverRes.json();
           setCoverLetterHtml(html);
@@ -149,16 +136,12 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId: job.id }),
       });
-      if (!res.ok) throw new Error("Failed to generate documents");
+      if (!res.ok) throw new Error("Failed to generate cover letter");
       onStatusChange(job.id, "prepared");
-      setSuccess("Documents generated successfully!");
+      setSuccess("Cover letter generated!");
 
-      // Fetch previews immediately after generation
-      const [resumeRes, coverRes] = await Promise.all([
-        fetch(`/api/applications/preview?jobId=${job.id}&doc=resume`),
-        fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`),
-      ]);
-      if (resumeRes.ok) setResumeHtml((await resumeRes.json()).html);
+      // Fetch preview immediately after generation
+      const coverRes = await fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`);
       if (coverRes.ok) setCoverLetterHtml((await coverRes.json()).html);
     } catch (err) {
       setError((err as Error).message);
@@ -211,7 +194,6 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this job?")) return;
     setDeleting(true);
     setError("");
     try {
@@ -245,7 +227,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
     }
   };
 
-  const hasPreview = PREVIEW_STATUSES.includes(job.status) || resumeHtml || coverLetterHtml;
+  const hasPreview = PREVIEW_STATUSES.includes(job.status) || coverLetterHtml;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth={hasPreview ? "md" : "sm"} fullWidth>
@@ -296,14 +278,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
           <>
             <Divider sx={{ my: 2 }} />
             <Box>
-              <Tabs
-                value={activeTab}
-                onChange={(_, v) => setActiveTab(v)}
-                sx={{ mb: 1, minHeight: 36 }}
-              >
-                <Tab label="Resume" sx={{ minHeight: 36, py: 0 }} />
-                <Tab label="Cover Letter" sx={{ minHeight: 36, py: 0 }} />
-              </Tabs>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Cover Letter Preview</Typography>
 
               {previewLoading ? (
                 <Box sx={{ p: 2 }}>
@@ -323,10 +298,10 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
                   }}
                 >
                   <iframe
-                    srcDoc={wrapHtml(activeTab === 0 ? resumeHtml : coverLetterHtml)}
+                    srcDoc={wrapHtml(coverLetterHtml)}
                     sandbox=""
                     style={{ width: "100%", height: "100%", border: "none" }}
-                    title={activeTab === 0 ? "Resume Preview" : "Cover Letter Preview"}
+                    title="Cover Letter Preview"
                   />
                 </Box>
               )}
@@ -375,7 +350,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
             disabled={generating}
             startIcon={generating ? <CircularProgress size={16} /> : <DescriptionIcon />}
           >
-            {generating ? "Generating..." : "Generate Resume & Cover Letter"}
+            {generating ? "Generating..." : "Generate Cover Letter"}
           </Button>
         )}
 
