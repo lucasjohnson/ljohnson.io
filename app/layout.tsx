@@ -3,10 +3,10 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { theme } from "@/lib/theme";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Job Application Dashboard",
-  description: "Track job listings, generate tailored resumes, and send applications",
+  title: "Lucas Johnson | Front End Web Developer",
 };
 
 export default function RootLayout({
@@ -18,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AppRouterCacheProvider>
+          <Analytics debug={false} />
           <ThemeProvider theme={theme}>
             <CssBaseline />
             {children}
