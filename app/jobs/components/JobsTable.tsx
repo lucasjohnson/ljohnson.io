@@ -25,6 +25,8 @@ interface Job {
   posted_at: string;
   fetched_at: string;
   notes: string;
+  apply_email: string | null;
+  apply_subject: string | null;
 }
 
 const columns: GridColDef[] = [

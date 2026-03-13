@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { generateResume } from "@/lib/docgen/resume";
 import { generateCoverLetter } from "@/lib/docgen/coverLetter";
+import mammoth from "mammoth";
 
 export async function POST(request: NextRequest) {
   const { jobId } = await request.json();
@@ -23,6 +24,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Ensure storage bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.some((b) => b.name === "applications")) {
+      await supabase.storage.createBucket("applications", { public: false });
+    }
+
     // Generate documents
     const resumeBuffer = await generateResume({
       title: job.title,
@@ -59,15 +66,47 @@ export async function POST(request: NextRequest) {
 
     if (coverUploadError) throw coverUploadError;
 
-    // Create application record
-    const { error: appError } = await supabase.from("applications").upsert(
-      {
-        job_id: jobId,
-        resume_url: `${prefix}/resume.docx`,
-        cover_letter_url: `${prefix}/cover-letter.docx`,
-      },
-      { onConflict: "job_id" }
-    );
+    // Convert DOCX to HTML for inline preview
+    const resumeHtmlResult = await mammoth.convertToHtml({ buffer: resumeBuffer });
+    const coverLetterHtmlResult = await mammoth.convertToHtml({ buffer: coverLetterBuffer });
+
+    // Upload HTML previews
+    const { error: resumeHtmlError } = await supabase.storage
+      .from("applications")
+      .upload(`${prefix}/resume.html`, Buffer.from(resumeHtmlResult.value), {
+        contentType: "text/html",
+        upsert: true,
+      });
+
+    if (resumeHtmlError) throw resumeHtmlError;
+
+    const { error: coverHtmlError } = await supabase.storage
+      .from("applications")
+      .upload(`${prefix}/cover-letter.html`, Buffer.from(coverLetterHtmlResult.value), {
+        contentType: "text/html",
+        upsert: true,
+      });
+
+    if (coverHtmlError) throw coverHtmlError;
+
+    // Create or update application record
+    const { data: existing } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("job_id", jobId)
+      .maybeSingle();
+
+    const appPayload = {
+      job_id: jobId,
+      resume_url: `${prefix}/resume.docx`,
+      cover_letter_url: `${prefix}/cover-letter.docx`,
+      resume_html_url: `${prefix}/resume.html`,
+      cover_letter_html_url: `${prefix}/cover-letter.html`,
+    };
+
+    const { error: appError } = existing
+      ? await supabase.from("applications").update(appPayload).eq("id", existing.id)
+      : await supabase.from("applications").insert(appPayload);
 
     if (appError) throw appError;
 

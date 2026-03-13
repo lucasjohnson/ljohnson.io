@@ -64,6 +64,8 @@ export async function GET(request: NextRequest) {
         score,
         posted_at: job.posted_at,
         fetched_at: today,
+        ...(job.apply_email && { apply_email: job.apply_email }),
+        ...(job.apply_subject && { apply_subject: job.apply_subject }),
       },
       { onConflict: "external_id", ignoreDuplicates: true }
     );

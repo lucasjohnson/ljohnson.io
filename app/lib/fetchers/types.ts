@@ -10,4 +10,6 @@ export interface RawJob {
   url: string;
   tags: string[];
   posted_at: string; // YYYY-MM-DD
+  apply_email?: string;
+  apply_subject?: string;
 }

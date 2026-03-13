@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const { data: emailResult, error: emailError } = await resend.emails.send({
       from: `${resumeData.name} <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
       to: [recipientEmail],
-      subject: `Application: ${job.title} — ${resumeData.name}`,
+      subject: job.apply_subject || `Application: ${job.title} — ${resumeData.name}`,
       html: `
         <p>Dear Hiring Team,</p>
         <p>Please find attached my application for the <strong>${job.title}</strong> position at <strong>${job.company}</strong>.</p>

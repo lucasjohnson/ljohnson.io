@@ -19,6 +19,11 @@ export async function fetchRemotive(): Promise<RawJob[]> {
 
       for (const job of data.jobs || []) {
         if (!matchesKeywords(`${job.title} ${job.description}`)) continue;
+
+        // Extract mailto: email from job description HTML
+        const mailtoMatch = (job.description || "").match(/mailto:([^\s"'<>]+)/i);
+        const applyEmail = mailtoMatch ? mailtoMatch[1] : undefined;
+
         results.push({
           external_id: `remotive-${job.id}`,
           source: "Remotive",
@@ -31,6 +36,8 @@ export async function fetchRemotive(): Promise<RawJob[]> {
           url: job.url,
           tags: job.tags || [],
           posted_at: job.publication_date?.split("T")[0] || today,
+          apply_email: applyEmail,
+          apply_subject: applyEmail ? `Application: ${job.title} — Lucas Johnson` : undefined,
         });
       }
     } catch (err) {
