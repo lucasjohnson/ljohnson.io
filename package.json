@@ -11,9 +11,11 @@
     "lint": "eslint",
     "fetch": "node scripts/fetchJobs.js",
     "prep": "node scripts/prepApplications.js",
-    "pipeline": "pnpm run fetch && pnpm run prep"
+    "pipeline": "pnpm run fetch && pnpm run prep",
+    "update-resume": "bash scripts/updateResume.sh"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -25,8 +27,6 @@
     "@supabase/supabase-js": "^2.99.1",
     "@tommyvez/passfort": "^1.0.1",
     "@vercel/analytics": "^2.0.1",
-    "docx": "^9.6.1",
-    "mammoth": "^1.12.0",
     "motion": "^12.36.0",
     "next": "16.1.6",
     "pdfkit": "^0.17.2",

@@ -63,3 +63,22 @@ npm run fetch
 - Location: Berlin / Remote
 - Deduplication: Jobs are never added twice (tracked by `id`)
 - History: Keeps up to 500 most recent listings
+
+## Updating resume data
+
+When you update the resume PDF at `public/Lucas-Johnson-Frontend-Engineer-Resume.pdf`, run:
+
+```bash
+pnpm update-resume
+```
+
+This invokes Claude Code to read the PDF and update:
+
+- `app/lib/resumeData.ts` — skills, experience, education, and summary
+- `app/lib/docgen/coverLetter.ts` — fit points and opening paragraph
+
+You can also pass a custom PDF path:
+
+```bash
+pnpm update-resume -- path/to/resume.pdf
+```

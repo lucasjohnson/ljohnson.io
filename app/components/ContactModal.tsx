@@ -178,16 +178,6 @@ export default function ContactModal() {
             >
               Get in touch
             </h2>
-            {/* <p
-              style={{
-                fontSize: 14,
-                color: "rgba(255,255,255,0.4)",
-                margin: "0 0 24px 0",
-              }}
-            >
-              I&apos;ll get back to you as soon as I can.
-            </p> */}
-
             {submitStatus === "sent" ? (
               <div
                 style={{

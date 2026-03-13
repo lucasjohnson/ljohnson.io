@@ -31,7 +31,6 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       for (const job of data.jobs || []) {
         if (!isTitleMatch(job.title)) continue;
 
-        // Extract mailto: email from job description HTML
         const mailtoMatch = (job.description || "").match(/mailto:([^\s"'<>]+)/i);
         const applyEmail = mailtoMatch ? mailtoMatch[1] : undefined;
 

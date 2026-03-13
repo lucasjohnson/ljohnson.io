@@ -54,7 +54,6 @@ function LoginForm() {
       }}
     >
       <div style={{ width: "100%", maxWidth: 380, textAlign: "center" }}>
-        {/* Logo / branding */}
         <div
           style={{
             width: 48,

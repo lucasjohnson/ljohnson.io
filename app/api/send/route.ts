@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServerClient();
 
-  // Fetch job + application
   const { data: job } = await supabase.from("jobs").select("*").eq("id", jobId).single();
   const { data: application } = await supabase.from("applications").select("*").eq("job_id", jobId).single();
 
@@ -22,7 +21,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Download docs from Supabase Storage
     const { data: resumeData_ } = await supabase.storage
       .from("applications")
       .download(application.resume_url);
@@ -38,7 +36,6 @@ export async function POST(request: NextRequest) {
     const resumeBuffer = Buffer.from(await resumeData_.arrayBuffer());
     const coverBuffer = Buffer.from(await coverData.arrayBuffer());
 
-    // Send email via Resend
     const { data: emailResult, error: emailError } = await resend.emails.send({
       from: `${resumeData.name} <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
       to: [recipientEmail],
@@ -63,13 +60,11 @@ export async function POST(request: NextRequest) {
 
     if (emailError) throw emailError;
 
-    // Update job status
     await supabase.from("jobs").update({
       status: "sent",
       applied_at: new Date().toISOString(),
     }).eq("id", jobId);
 
-    // Update application
     await supabase.from("applications").update({
       email_sent_at: new Date().toISOString(),
       recipient_email: recipientEmail,

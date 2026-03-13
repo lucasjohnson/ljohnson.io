@@ -6,7 +6,7 @@ import { theme } from "@/lib/theme";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Lucas Johnson | Front End Web Developer",
+  title: "Lucas Johnson | Frontend Engineer",
 };
 
 export default function RootLayout({

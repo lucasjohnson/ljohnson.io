@@ -14,7 +14,6 @@ import Skeleton from "@mui/material/Skeleton";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DescriptionIcon from "@mui/icons-material/Description";
 import SendIcon from "@mui/icons-material/Send";
-import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StatusChip from "./StatusChip";
@@ -45,32 +44,6 @@ interface JobModalProps {
   onDelete: (jobId: string) => void;
 }
 
-function wrapHtml(html: string | null): string {
-  if (!html) return "<p style='padding:16px;color:#666'>No preview available</p>";
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body {
-      font-family: 'Inter', Arial, sans-serif;
-      font-size: 14px;
-      line-height: 1.6;
-      padding: 24px;
-      margin: 0;
-      color: #ededed;
-      background: #0a0a0a;
-    }
-    h1 { font-size: 18px; margin: 16px 0 8px; color: #fff; }
-    h2 { font-size: 16px; margin: 12px 0 6px; color: #fff; }
-    p { margin: 4px 0; }
-    ul, ol { margin: 4px 0; padding-left: 24px; }
-    a { color: #60a5fa; }
-  </style>
-</head>
-<body>${html}</body>
-</html>`;
-}
-
 const PREVIEW_STATUSES = ["prepared", "approved", "sent"];
 
 export default function JobModal({ job, open, onClose, onStatusChange, onDelete }: JobModalProps) {
@@ -82,9 +55,8 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
   const [recipientEmail, setRecipientEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [coverLetterHtml, setCoverLetterHtml] = useState<string | null>(null);
+  const [coverLetterText, setCoverLetterText] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -94,9 +66,8 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
       setRecipientEmail(job?.apply_email || "");
       setError("");
       setSuccess("");
-      setCoverLetterHtml(null);
+      setCoverLetterText(null);
       setPreviewLoading(false);
-      setDownloading(false);
       setDeleting(false);
       setMarkingApplied(false);
     }
@@ -106,22 +77,21 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
     if (!open || !job) return;
     if (!PREVIEW_STATUSES.includes(job.status)) return;
 
-    const fetchPreviews = async () => {
+    const fetchCoverLetter = async () => {
       setPreviewLoading(true);
       try {
-        const coverRes = await fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`);
-        if (coverRes.ok) {
-          const { html } = await coverRes.json();
-          setCoverLetterHtml(html);
+        const res = await fetch(`/api/applications/text?jobId=${job.id}`);
+        if (res.ok) {
+          const { coverLetterText: text } = await res.json();
+          setCoverLetterText(text);
         }
       } catch {
-        // Previews are non-critical
       } finally {
         setPreviewLoading(false);
       }
     };
 
-    fetchPreviews();
+    fetchCoverLetter();
   }, [open, job?.id, job?.status]);
 
   if (!job) return null;
@@ -136,11 +106,10 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
         body: JSON.stringify({ jobId: job.id }),
       });
       if (!res.ok) throw new Error("Failed to generate cover letter");
+      const { coverLetterText: text } = await res.json();
+      setCoverLetterText(text);
       onStatusChange(job.id, "prepared");
       setSuccess("Cover letter generated!");
-
-      const coverRes = await fetch(`/api/applications/preview?jobId=${job.id}&doc=cover-letter`);
-      if (coverRes.ok) setCoverLetterHtml((await coverRes.json()).html);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -169,25 +138,6 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
       setError((err as Error).message);
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/applications/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: job.id }),
-      });
-      if (!res.ok) throw new Error("Failed to download documents");
-      const { path } = await res.json();
-      setSuccess(`Documents saved to ${path}`);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setDownloading(false);
     }
   };
 
@@ -225,7 +175,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
     }
   };
 
-  const hasPreview = PREVIEW_STATUSES.includes(job.status) || coverLetterHtml;
+  const hasPreview = PREVIEW_STATUSES.includes(job.status) || coverLetterText;
 
   const Tag = ({ children }: { children: React.ReactNode }) => (
     <span
@@ -306,7 +256,7 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
             <Box sx={{ borderTop: "1px solid rgba(255,255,255,0.08)", my: 2 }} />
             <Box>
               <Typography sx={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.04em", mb: 1 }}>
-                Cover Letter Preview
+                Cover Letter
               </Typography>
 
               {previewLoading ? (
@@ -314,23 +264,23 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
                   <Skeleton variant="text" width="80%" />
                   <Skeleton variant="text" width="60%" />
                   <Skeleton variant="text" width="90%" />
-                  <Skeleton variant="rectangular" height={200} sx={{ mt: 1 }} />
+                  <Skeleton variant="rectangular" height={120} sx={{ mt: 1 }} />
                 </Box>
               ) : (
                 <Box
                   sx={{
                     border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: "8px",
-                    height: 400,
-                    overflow: "hidden",
+                    p: 2.5,
+                    maxHeight: 400,
+                    overflow: "auto",
+                    whiteSpace: "pre-wrap",
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                    color: "rgba(255,255,255,0.8)",
                   }}
                 >
-                  <iframe
-                    srcDoc={wrapHtml(coverLetterHtml)}
-                    sandbox=""
-                    style={{ width: "100%", height: "100%", border: "none" }}
-                    title="Cover Letter Preview"
-                  />
+                  {coverLetterText}
                 </Box>
               )}
             </Box>
@@ -382,17 +332,6 @@ export default function JobModal({ job, open, onClose, onStatusChange, onDelete 
             startIcon={generating ? <CircularProgress size={14} /> : <DescriptionIcon sx={{ fontSize: 16 }} />}
           >
             {generating ? "Generating..." : "Generate Cover Letter"}
-          </Button>
-        )}
-
-        {PREVIEW_STATUSES.includes(job.status) && (
-          <Button
-            variant="outlined"
-            onClick={handleDownload}
-            disabled={downloading}
-            startIcon={downloading ? <CircularProgress size={14} /> : <DownloadIcon sx={{ fontSize: 16 }} />}
-          >
-            {downloading ? "Saving..." : "Download"}
           </Button>
         )}
 

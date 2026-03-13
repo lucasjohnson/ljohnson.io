@@ -7,7 +7,6 @@ import { fetchRemotive } from "@/lib/fetchers/remotive";
 export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret (Vercel sends this header for cron jobs)
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +17,6 @@ export async function GET(request: NextRequest) {
 
   console.log(`Job fetch started — ${today}`);
 
-  // Fetch from all sources in parallel
   const [arbeitnow, linkedin, remotive] = await Promise.all([
     fetchArbeitnow(),
     fetchLinkedIn(),
@@ -27,17 +25,14 @@ export async function GET(request: NextRequest) {
 
   const allFetched = [...arbeitnow, ...linkedin, ...remotive];
 
-  // Deduplicate within batch
   const seenIds = new Set<string>();
   const unique = allFetched.filter((j) => !seenIds.has(j.external_id) && seenIds.add(j.external_id));
 
-  // Filter: remote or Berlin-based
   const filtered = unique.filter((j) => {
     if (j.remote) return true;
     return j.location.toLowerCase().includes("berlin");
   });
 
-  // Upsert into Supabase
   let inserted = 0;
   for (const job of filtered) {
     const { error } = await supabase.from("jobs").upsert(

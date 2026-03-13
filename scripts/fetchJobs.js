@@ -1,11 +1,3 @@
-/**
- * Job Search Automation Script
- * Fetches jobs from Arbeitnow, LinkedIn, and Remotive
- * Filters for: Remote, Berlin, Next.js/React, Visa Sponsorship, English-only
- * Scores jobs 1–5 based on relevance
- * Output: Supabase `jobs` table
- */
-
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 
@@ -13,8 +5,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
-// ─── Config ────────────────────────────────────────────────────────────────
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -29,16 +19,12 @@ const GERMAN_MARKERS = [
   "und", "für", "gesucht",
 ];
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
 function isTitleMatch(title = "") {
   const lower = title.toLowerCase();
   const hasMatch = TITLE_PATTERNS.some((p) => lower.includes(p));
   const isGerman = GERMAN_MARKERS.some((g) => lower.includes(g));
   return hasMatch && !isGerman;
 }
-
-// ─── Source 1: Arbeitnow (Public API) ──────────────────────────────────────
 
 async function fetchArbeitnow() {
   console.log("🔍 Fetching from Arbeitnow...");
@@ -79,8 +65,6 @@ async function fetchArbeitnow() {
   }
   return results;
 }
-
-// ─── Source 2: LinkedIn (HTML scraping) ─────────────────────────────────────
 
 async function fetchLinkedIn() {
   console.log("🔍 Fetching from LinkedIn...");
@@ -141,8 +125,6 @@ async function fetchLinkedIn() {
   return unique;
 }
 
-// ─── Source 3: Remotive (Public API) ────────────────────────────────────────
-
 async function fetchRemotive() {
   console.log("🔍 Fetching from Remotive...");
   const results = [];
@@ -181,12 +163,9 @@ async function fetchRemotive() {
   return unique;
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
-
 async function main() {
   console.log(`\n🚀 Job search run — ${TODAY}\n`);
 
-  // Verify Supabase connection
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error("❌ Missing Supabase env vars. Check .env.local");
     process.exit(1);
@@ -200,17 +179,14 @@ async function main() {
 
   const allFetched = [...arbeitnow, ...linkedin, ...remotive];
 
-  // Deduplicate within the current batch
   const seenIds = new Set();
   const uniqueFetched = allFetched.filter((j) => !seenIds.has(j.external_id) && seenIds.add(j.external_id));
 
-  // Filter out non-remote jobs outside Berlin
   const filtered = uniqueFetched.filter((j) => {
     if (j.remote) return true;
     return (j.location || "").toLowerCase().includes("berlin");
   });
 
-  // Upsert into Supabase (ignoreDuplicates skips existing external_ids)
   let inserted = 0;
   let skipped = 0;
 

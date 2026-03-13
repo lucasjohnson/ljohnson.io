@@ -35,14 +35,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Create output directory: {date}-{company}
     const date = new Date().toISOString().split("T")[0];
     const company = job.company.replace(/[^a-zA-Z0-9-_ ]/g, "").trim().replace(/\s+/g, "-");
     const dirName = `${date}-${company}`;
     const outputDir = path.join(APPLICATIONS_DIR, dirName);
     await mkdir(outputDir, { recursive: true });
 
-    // Download cover letter DOCX from storage and convert to text
     const { data: coverBlob } = await supabase.storage
       .from("applications")
       .download(application.cover_letter_url);
