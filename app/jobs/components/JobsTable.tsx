@@ -1,10 +1,17 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TableSortLabel from "@mui/material/TableSortLabel";
+import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
-import StarIcon from "@mui/icons-material/Star";
+import CircularProgress from "@mui/material/CircularProgress";
+import { TableVirtuoso, TableComponents } from "react-virtuoso";
 import { supabase } from "@/lib/supabase/client";
 import StatusChip from "./StatusChip";
 import JobModal from "./JobModal";
@@ -19,7 +26,6 @@ interface Job {
   salary: string | null;
   tags: string[];
   url: string;
-  score: number;
   status: string;
   source: string;
   posted_at: string;
@@ -29,59 +35,64 @@ interface Job {
   apply_subject: string | null;
 }
 
-const columns: GridColDef[] = [
-  {
-    field: "score",
-    headerName: "Score",
-    width: 100,
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-        {Array.from({ length: 5 }, (_, i) => (
-          <StarIcon
-            key={i}
-            sx={{
-              color: i < params.value ? "#faaf00" : "#e0e0e0",
-              fontSize: 16,
-            }}
-          />
-        ))}
-      </Box>
-    ),
-  },
-  { field: "title", headerName: "Job Title", flex: 1, minWidth: 200 },
-  { field: "company", headerName: "Company", width: 160 },
-  { field: "location", headerName: "Location", width: 140 },
+interface Column {
+  field: keyof Job;
+  label: string;
+  width?: number;
+  flex?: boolean;
+  render?: (value: unknown, row: Job) => React.ReactNode;
+}
+
+const columns: Column[] = [
+  { field: "title", label: "Job Title", flex: true },
+  { field: "company", label: "Company", width: 160 },
+  { field: "location", label: "Location", width: 140 },
   {
     field: "source",
-    headerName: "Source",
+    label: "Source",
     width: 110,
-    renderCell: (params: GridRenderCellParams) => (
-      <Chip label={params.value} size="small" variant="outlined" />
-    ),
+    render: (value) => <Chip label={value as string} size="small" variant="outlined" />,
   },
   {
     field: "status",
-    headerName: "Status",
+    label: "Status",
     width: 110,
-    renderCell: (params: GridRenderCellParams) => (
-      <StatusChip status={params.value} />
-    ),
+    render: (value) => <StatusChip status={value as string} />,
   },
-  { field: "posted_at", headerName: "Posted", width: 110 },
+  { field: "posted_at", label: "Posted", width: 110 },
 ];
+
+type SortDir = "asc" | "desc";
+
+const VirtuosoTableComponents: TableComponents<Job> = {
+  Scroller: forwardRef<HTMLDivElement>((props, ref) => (
+    <TableContainer component={Paper} {...props} ref={ref} sx={{ borderRadius: 2 }} />
+  )),
+  Table: (props) => (
+    <Table {...props} sx={{ borderCollapse: "separate", tableLayout: "fixed" }} />
+  ),
+  TableHead: forwardRef<HTMLTableSectionElement>((props, ref) => (
+    <TableHead {...props} ref={ref} />
+  )),
+  TableRow: ({ ...props }) => <TableRow hover {...props} sx={{ cursor: "pointer" }} />,
+  TableBody: forwardRef<HTMLTableSectionElement>((props, ref) => (
+    <TableBody {...props} ref={ref} />
+  )),
+};
 
 export default function JobsTable() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [sortField, setSortField] = useState<keyof Job>("fetched_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("jobs")
       .select("*")
-      .order("score", { ascending: false })
       .order("fetched_at", { ascending: false });
 
     if (!error && data) {
@@ -94,8 +105,22 @@ export default function JobsTable() {
     fetchJobs();
   }, [fetchJobs]);
 
-  const handleRowClick = (params: { row: Job }) => {
-    setSelectedJob(params.row);
+  const handleSort = (field: keyof Job) => {
+    const isAsc = sortField === field && sortDir === "asc";
+    setSortDir(isAsc ? "desc" : "asc");
+    setSortField(field);
+  };
+
+  const sortedJobs = [...jobs].sort((a, b) => {
+    const aVal = a[sortField] ?? "";
+    const bVal = b[sortField] ?? "";
+    if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleRowClick = (job: Job) => {
+    setSelectedJob(job);
     setModalOpen(true);
   };
 
@@ -108,25 +133,61 @@ export default function JobsTable() {
     }
   };
 
+  const handleDelete = (jobId: string) => {
+    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+    if (selectedJob?.id === jobId) {
+      setSelectedJob(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", pt: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ width: "100%", height: "calc(100vh - 140px)" }}>
-      <DataGrid
-        rows={jobs}
-        columns={columns}
-        loading={loading}
-        onRowClick={handleRowClick}
-        initialState={{
-          sorting: { sortModel: [{ field: "score", sort: "desc" }] },
-          pagination: { paginationModel: { pageSize: 25 } },
-        }}
-        pageSizeOptions={[10, 25, 50, 100]}
-        sx={{
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          "& .MuiDataGrid-row": { cursor: "pointer" },
-          "& .MuiDataGrid-row:hover": { bgcolor: "action.hover" },
-        }}
-        disableRowSelectionOnClick
+      <TableVirtuoso
+        data={sortedJobs}
+        components={VirtuosoTableComponents}
+        fixedHeaderContent={() => (
+          <TableRow sx={{ bgcolor: "background.paper" }}>
+            {columns.map((col) => (
+              <TableCell
+                key={col.field}
+                sx={{
+                  width: col.flex ? undefined : col.width,
+                  fontWeight: 700,
+                  bgcolor: "background.paper",
+                }}
+              >
+                <TableSortLabel
+                  active={sortField === col.field}
+                  direction={sortField === col.field ? sortDir : "asc"}
+                  onClick={() => handleSort(col.field)}
+                >
+                  {col.label}
+                </TableSortLabel>
+              </TableCell>
+            ))}
+          </TableRow>
+        )}
+        itemContent={(_index, job) => (
+          <>
+            {columns.map((col) => (
+              <TableCell
+                key={col.field}
+                sx={{ width: col.flex ? undefined : col.width }}
+                onClick={() => handleRowClick(job)}
+              >
+                {col.render ? col.render(job[col.field], job) : (job[col.field] as string)}
+              </TableCell>
+            ))}
+          </>
+        )}
       />
 
       <JobModal
@@ -134,6 +195,7 @@ export default function JobsTable() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onStatusChange={handleStatusChange}
+        onDelete={handleDelete}
       />
     </Box>
   );
