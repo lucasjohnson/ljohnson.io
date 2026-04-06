@@ -72,7 +72,7 @@ export default function HeroAnimated() {
         Lucas Johnson
         <br />
         <span style={{ color: "rgba(255,255,255,0.5)" }}>
-          Frontend Engineer
+          Senior Frontend Engineer
         </span>
       </motion.h1>
 
@@ -93,6 +93,35 @@ export default function HeroAnimated() {
       >
         10+ years of experience building production web applications with React,
         TypeScript, and Next.js.
+      </motion.p>
+
+      <motion.p
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.3 }}
+        style={{
+          fontSize: 18,
+          lineHeight: 1.6,
+          color: "rgba(255,255,255,0.5)",
+          margin: "0 0 40px 0",
+          maxWidth: 480,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      >
+        Latest project:{" "}
+        <a
+          href="https://www.wattenergy.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "rgba(255,255,255,0.7)",
+            textDecoration: "underline",
+          }}
+        >
+          Watt Energy
+        </a>
       </motion.p>
 
       <div
