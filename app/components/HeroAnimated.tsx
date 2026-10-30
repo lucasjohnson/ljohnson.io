@@ -91,7 +91,7 @@ export default function HeroAnimated() {
           marginRight: "auto",
         }}
       >
-        10+ years of experience building production web applications with React,
+        11+ years of experience building production web applications in React,
         TypeScript, and Next.js.
       </motion.p>
 
